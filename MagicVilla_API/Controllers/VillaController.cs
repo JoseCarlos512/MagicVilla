@@ -50,6 +50,13 @@ namespace MagicVilla_API.Controllers
                 return BadRequest(ModelState);
             }
 
+            if (VillaStore.VillaList.FirstOrDefault(v=>v.Nombre.ToLower() == villaDto.Nombre.ToLower()) != null)
+            {
+                ModelState.AddModelError("NombreExiste", "El nombre de la villa utilizado ya existe");
+
+                return BadRequest(ModelState);        
+            }
+
             if (villaDto == null)
             {
                 return BadRequest();
@@ -64,7 +71,59 @@ namespace MagicVilla_API.Controllers
             villaDto.Id = VillaStore.VillaList.OrderByDescending(v=>v.Id)
                                     .FirstOrDefault().Id + 1;
 
+            VillaStore.VillaList.Add(villaDto);
+
             return CreatedAtRoute("GetVilla", new { id = villaDto.Id}, villaDto);
+        }
+
+
+        [HttpDelete("id")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult DeleteVilla(int id) { 
+            
+            if (id==0) {
+                return BadRequest();
+            }
+
+            var villa = VillaStore.VillaList.FirstOrDefault(v => v.Id == id);   
+            
+            if (villa==null) {
+                return NotFound();
+            }
+
+            VillaStore.VillaList.Remove(villa);
+
+            return NoContent();
+
+        }
+
+        [HttpPut("id:int")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult UpdateVilla(int id, [FromBody] VillaDto villaDto)
+        {
+
+            if (villaDto==null || id!=villaDto.Id)
+            {
+                return BadRequest();
+            }
+
+            var villa = VillaStore.VillaList.FirstOrDefault(v => v.Id == id);
+
+            if (villa == null)
+            {
+                return NotFound();
+            }
+
+            villa.Nombre = villaDto.Nombre;
+            villa.Ocupantes = villaDto.Ocupantes;
+            villa.MetrosCuadrados = villaDto.MetrosCuadrados;
+            
+            return NoContent();
+
         }
 
     }
