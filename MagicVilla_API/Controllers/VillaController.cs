@@ -12,11 +12,12 @@ namespace MagicVilla_API.Controllers
     {
 
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult<IEnumerable<VillaDto>> GetVillas() {
             return Ok(VillaStore.VillaList);
         }
 
-        [HttpGet("id:int")]
+        [HttpGet("id:int", Name = "GetVilla")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -35,6 +36,35 @@ namespace MagicVilla_API.Controllers
             }
 
             return Ok(villa);
+        }
+
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public ActionResult<VillaDto> CrearVilla([FromBody] VillaDto villaDto)
+        {
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (villaDto == null)
+            {
+                return BadRequest();
+            }
+
+            if (villaDto.Id > 0)
+            {
+                // No concuerdo, pero indica que si el id es != de 0 no es insert
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+
+            villaDto.Id = VillaStore.VillaList.OrderByDescending(v=>v.Id)
+                                    .FirstOrDefault().Id + 1;
+
+            return CreatedAtRoute("GetVilla", new { id = villaDto.Id}, villaDto);
         }
 
     }
